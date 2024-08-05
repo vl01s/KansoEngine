@@ -9,8 +9,7 @@
 #include <log.h>
 #include <shm.h>
 
-/* 'randName' generates a random name for the first 'n' characters of 'name'. */
-void randName(char name[], const int n)
+static void randName(char name[], const int n)
 {
     if (name && n > 0) {
         struct timespec ts;
@@ -21,13 +20,13 @@ void randName(char name[], const int n)
             r >>= 5;
         }
     }
-} // STATIC
+}
 
-int createShm(void)
+static int createShm(void)
 {
     char name[] = "/wl_shm-XXXXXX";
     randName(name + sizeof(name) - 7, 6);
-    int retries = 100, fd;
+    int retries = 100, fd = -1;
 
     do {
         --retries;
@@ -43,7 +42,7 @@ int createShm(void)
 
     shm_unlink(name);
     return fd;
-} // STATIC
+}
 
 int allocateShm(const size_t size)
 {
@@ -53,9 +52,9 @@ int allocateShm(const size_t size)
         return -1;
     }
 
-    int ret;
+    int ret = -1;
     do {
-        ret = ftruncate(fd, size);
+        ret = ftruncate(fd, (off_t)size);
     } while (ret < 0 && errno == EINTR);
 
     if (ret < 0) {
